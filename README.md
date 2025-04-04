@@ -1,7 +1,3 @@
-Here’s a combined and well-organized **README.md** that brings together all the problem statements, scopes, and deliverables for your YouTube-focused project:
-
----
-
 # 🎯 FocusTube - Minimal YouTube Viewer
 
 ## 📌 Overview
