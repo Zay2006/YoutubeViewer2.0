@@ -1,102 +1,140 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import VideoCard from '@/components/VideoCard'
 import { useYoutubeData } from '@/hooks/useYoutubeData'
-import ThemeToggle from '@/components/ThemeToggle'
 
-const extractVideoId = (url: string) => {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-  const match = url.match(regExp)
-  return match && match[2].length === 11 ? match[2] : ''
+interface YouTubeParams {
+  videoId?: string;
+  playlistId?: string;
+}
+
+/**
+ * Extracts video ID and playlist ID from a YouTube URL
+ * Supports formats:
+ * - youtube.com/watch?v=VIDEO_ID
+ * - youtu.be/VIDEO_ID
+ * - youtube.com/playlist?list=PLAYLIST_ID
+ * - youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID
+ */
+const extractYouTubeParams = (url: string): YouTubeParams => {
+  const videoRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
+  const playlistRegExp = /[?&]list=([^#\&\?]*)/
+
+  const videoMatch = url.match(videoRegExp)
+  const playlistMatch = url.match(playlistRegExp)
+
+  const videoId = videoMatch?.[2]
+  const playlistId = playlistMatch?.[1]
+
+  return {
+    videoId: videoId?.length === 11 ? videoId : undefined,
+    playlistId: playlistId || undefined
+  }
 }
 
 export default function Home() {
   const [videoUrl, setVideoUrl] = useState('')
-  const videoId = extractVideoId(videoUrl)
-  const { mainVideo, recommendedVideos } = useYoutubeData(videoId)
-
-  useEffect(() => {
-    // Load user theme preference if exists
-    const userProfile = localStorage.getItem('user_profile')
-    if (userProfile) {
-      const { theme } = JSON.parse(userProfile)
-      document.documentElement.className = theme
-    }
-  }, [])
+  const { videoId, playlistId } = extractYouTubeParams(videoUrl)
+  const { mainVideo, recommendedVideos, loading } = useYoutubeData(videoId || '')
 
   const handleLoadVideo = () => {
-    // Video ID is automatically extracted via the videoId variable
-    setVideoUrl(videoUrl.trim())
+    const trimmedUrl = videoUrl.trim()
+    if (!trimmedUrl) return
+    setVideoUrl(trimmedUrl)
   }
 
   const handleVideoSelect = (id: string) => {
+    if (!id) return
     setVideoUrl(`https://www.youtube.com/watch?v=${id}`)
   }
 
   return (
-    <main className="min-h-screen p-4 bg-gray-50 dark:bg-gray-900">
-      <nav className="nav-bar sticky top-0 z-50 mb-8">
-        <div className="max-w-7xl mx-auto flex justify-between items-center p-4">
-          <h1 className="text-2xl font-bold text-primary">FocusTube</h1>
-          <div className="flex items-center gap-4">
-            <div className="relative">
+    <main className="min-h-screen p-4 bg-background text-foreground">
+      {/* Video input section */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="card p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex-1 w-full">
               <input
                 type="text"
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleLoadVideo()}
                 placeholder="Enter YouTube URL or Video ID"
-                className="p-2 pl-4 pr-10 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 w-64 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="form-input"
               />
-              <button
-                onClick={handleLoadVideo}
-                className="absolute right-1 top-1 px-3 py-1 bg-primary text-white rounded-full hover:bg-blue-600 transition-colors text-sm"
-              >
-                Load
-              </button>
             </div>
-            <ThemeToggle />
+            <button
+              onClick={handleLoadVideo}
+              className="btn-primary w-full md:w-auto"
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Load Video'}
+            </button>
           </div>
         </div>
-      </nav>
+      </div>
 
+      {/* Main content */}
       <div className="max-w-7xl mx-auto grid gap-6">
         {/* Main video section */}
         <section className="grid grid-cols-1 gap-6">
           <div className="w-full">
-            <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-              {videoId && (
+            <div className="aspect-video bg-muted rounded-lg overflow-hidden shadow-lg relative">
+              {(videoId || playlistId) ? (
                 <iframe
-                  src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/${
+                    videoId || ''
+                  }${playlistId ? `?list=${playlistId}` : '?rel=0&modestbranding=1'}`}
                   title="YouTube video player"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="w-full h-full"
+                  loading="lazy"
                 />
+              ) : (
+                <div className="flex items-center justify-center h-full text-secondary">
+                  Enter a YouTube URL or video ID above to start watching
+                </div>
+              )}
+              {loading && (
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+                </div>
               )}
             </div>
             {mainVideo && (
-              <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="mt-4 card">
                 <h2 className="text-xl font-bold mb-2">{mainVideo.title}</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{mainVideo.views} views</p>
-                <p className="text-gray-700 dark:text-gray-300">{mainVideo.description}</p>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-secondary mb-2">
+                  {mainVideo.channel && (
+                    <>
+                      <span className="font-medium">{mainVideo.channel}</span>
+                      <span>•</span>
+                    </>
+                  )}
+                  <span>{mainVideo.views}</span>
+                </div>
               </div>
             )}
           </div>
 
           {/* Recommended videos */}
-          <div className="w-full">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Recommended Videos</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {recommendedVideos.map((video) => (
-                <VideoCard
-                  key={video.id}
-                  {...video}
-                  onSelect={handleVideoSelect}
-                />
-              ))}
+          {recommendedVideos.length > 0 && (
+            <div className="w-full">
+              <h3 className="text-lg font-semibold mb-4">Recommended Videos</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {recommendedVideos.map((video) => (
+                  <VideoCard
+                    key={video.id}
+                    {...video}
+                    onSelect={handleVideoSelect}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </section>
       </div>
     </main>

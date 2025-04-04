@@ -18,23 +18,23 @@ export default function VideoCard({
   return (
     <div 
       onClick={() => onSelect(id)}
-      className="cursor-pointer group bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow hover:shadow-md transition-shadow"
+      className="card cursor-pointer group hover:shadow-md transition-shadow"
     >
-      <div className="relative aspect-video">
+      <div className="relative aspect-video bg-muted rounded-t-lg overflow-hidden">
         <img 
           src={thumbnail}
           alt={title}
           className="w-full h-full object-cover"
         />
-        <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/80 text-white text-sm rounded">
+        <span className="absolute bottom-2 right-2 px-2 py-1 bg-background/80 text-foreground text-sm rounded-md">
           {duration}
         </span>
       </div>
       <div className="p-3">
-        <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-primary line-clamp-2 text-sm">
+        <h3 className="font-medium text-foreground group-hover:text-primary line-clamp-2 text-sm">
           {title}
         </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-secondary mt-1">
           {views} views
         </p>
       </div>

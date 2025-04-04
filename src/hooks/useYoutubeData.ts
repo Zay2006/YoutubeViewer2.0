@@ -1,79 +1,114 @@
 import { useState, useEffect } from 'react'
 
-// Mock data for demonstration (in a real app, this would come from YouTube API)
-const MOCK_VIDEOS = [
-  {
-    id: 'dQw4w9WgXcQ',
-    title: 'Never Gonna Give You Up',
-    thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-    duration: '3:32',
-    views: '1.2B',
-    description: 'The classic music video that started it all...'
-  },
-  {
-    id: 'jNQXAC9IVRw',
-    title: 'Me at the zoo',
-    thumbnail: 'https://i.ytimg.com/vi/jNQXAC9IVRw/maxresdefault.jpg',
-    duration: '0:18',
-    views: '258M',
-    description: 'The first video on YouTube'
-  },
-  {
-    id: '9bZkp7q19f0',
-    title: 'PSY - GANGNAM STYLE',
-    thumbnail: 'https://i.ytimg.com/vi/9bZkp7q19f0/maxresdefault.jpg',
-    duration: '4:12',
-    views: '4.6B',
-    description: 'The most-viewed video of all time'
-  },
-  {
-    id: 'kJQP7kiw5Fk',
-    title: 'Luis Fonsi - Despacito ft. Daddy Yankee',
-    thumbnail: 'https://i.ytimg.com/vi/kJQP7kiw5Fk/maxresdefault.jpg',
-    duration: '4:41',
-    views: '8.1B',
-    description: 'The second most-viewed video of all time'
-  },
-  {
-    id: 'JGwWNGJdvx8',
-    title: 'Ed Sheeran - Shape of You',
-    thumbnail: 'https://i.ytimg.com/vi/JGwWNGJdvx8/maxresdefault.jpg',
-    duration: '4:23',
-    views: '5.9B',
-    description: 'One of the most popular music videos'
-  }
-]
-
-export interface Video {
+export interface VideoData {
   id: string
   title: string
   thumbnail: string
-  duration: string
   views: string
-  description: string
+  duration: string
+  channel?: string
 }
 
-export function useYoutubeData(currentVideoId?: string) {
-  const [mainVideo, setMainVideo] = useState<Video | null>(null)
-  const [recommendedVideos, setRecommendedVideos] = useState<Video[]>([])
+const SAMPLE_VIDEOS: Record<string, VideoData[]> = {
+  // Gaming category
+  gaming: [
+    {
+      id: 'dQw4w9WgXcQ',
+      title: 'Top Gaming Moments 2025',
+      thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
+      views: '2.1M views',
+      duration: '12:45',
+      channel: 'Gaming Central'
+    },
+    {
+      id: 'ZZ5LpwO-An4',
+      title: 'Pro Gaming Tips & Tricks',
+      thumbnail: 'https://img.youtube.com/vi/ZZ5LpwO-An4/maxresdefault.jpg',
+      views: '890K views',
+      duration: '8:30',
+      channel: 'Pro Gaming'
+    }
+  ],
+  // Music category
+  music: [
+    {
+      id: 'y6120QOlsfU',
+      title: 'New Music Hits 2025',
+      thumbnail: 'https://img.youtube.com/vi/y6120QOlsfU/maxresdefault.jpg',
+      views: '3.2M views',
+      duration: '15:20',
+      channel: 'Music Now'
+    },
+    {
+      id: '9bZkp7q19f0',
+      title: 'Top Charts Compilation',
+      thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg',
+      views: '1.5M views',
+      duration: '10:15',
+      channel: 'Music Charts'
+    }
+  ],
+  // Technology category
+  tech: [
+    {
+      id: 'M7lc1UVf-VE',
+      title: 'Latest Tech Reviews 2025',
+      thumbnail: 'https://img.youtube.com/vi/M7lc1UVf-VE/maxresdefault.jpg',
+      views: '950K views',
+      duration: '18:30',
+      channel: 'Tech Review'
+    },
+    {
+      id: 'rfscVS0vtbw',
+      title: 'Programming Tutorial',
+      thumbnail: 'https://img.youtube.com/vi/rfscVS0vtbw/maxresdefault.jpg',
+      views: '750K views',
+      duration: '25:45',
+      channel: 'Code Master'
+    }
+  ]
+}
+
+export function useYoutubeData(videoId: string) {
+  const [mainVideo, setMainVideo] = useState<VideoData | null>(null)
+  const [recommendedVideos, setRecommendedVideos] = useState<VideoData[]>([])
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (currentVideoId) {
-      // Find the main video
-      const main = MOCK_VIDEOS.find(v => v.id === currentVideoId) || MOCK_VIDEOS[0]
-      setMainVideo(main)
-
-      // Get recommended videos (excluding the main video)
-      const recommended = MOCK_VIDEOS
-        .filter(v => v.id !== currentVideoId)
-        .slice(0, 4)
-      setRecommendedVideos(recommended)
-    } else {
-      // Default to first video as main
-      setMainVideo(MOCK_VIDEOS[0])
-      setRecommendedVideos(MOCK_VIDEOS.slice(1, 5))
+    if (!videoId) {
+      setMainVideo(null)
+      setRecommendedVideos([])
+      return
     }
-  }, [currentVideoId])
 
-  return { mainVideo, recommendedVideos }
+    setLoading(true)
+
+    // Simulate API delay
+    setTimeout(() => {
+      // Update main video
+      setMainVideo({
+        id: videoId,
+        title: `Video ${videoId}`,
+        thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        views: `${Math.floor(Math.random() * 900 + 100)}K views`,
+        duration: `${Math.floor(Math.random() * 10 + 5)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
+        channel: 'Channel Name'
+      })
+
+      // Get random category for recommendations
+      const categories = Object.keys(SAMPLE_VIDEOS)
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)]
+      
+      // Get recommendations
+      const recommendations = SAMPLE_VIDEOS[randomCategory]
+        .filter(video => video.id !== videoId)
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 4)
+
+      setRecommendedVideos(recommendations)
+      setLoading(false)
+    }, 500)
+  }, [videoId])
+
+  return { mainVideo, recommendedVideos, loading }
 }

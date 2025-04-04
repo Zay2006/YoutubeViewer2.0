@@ -2,74 +2,58 @@
 
 import { useState, useEffect } from 'react'
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
-import { useUserPreferences } from '@/hooks/useUserPreferences'
-import FeedbackForm from './FeedbackForm'
+import type { ThemeOption } from '@/types/user'
+
+const THEME_ICONS = {
+  light: <SunIcon className="w-6 h-6" />,
+  dark: <MoonIcon className="w-6 h-6" />,
+  blue: <SunIcon className="w-6 h-6 text-blue-500" />,
+  purple: <SunIcon className="w-6 h-6 text-purple-500" />,
+  green: <SunIcon className="w-6 h-6 text-green-500" />
+} as const
 
 export default function ThemeToggle() {
+  const [theme, setTheme] = useState<ThemeOption>('light')
   const [mounted, setMounted] = useState(false)
-  const {
-    preferences,
-    showFeedbackForm,
-    setShowFeedbackForm,
-    savePreferences,
-    requestThemeChange
-  } = useUserPreferences()
-
-  const isDark = preferences?.theme === 'dark'
 
   useEffect(() => {
-    setMounted(true)
-    // Handle system preference if no saved preference
-    if (!preferences && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark')
+    const savedTheme = localStorage.getItem('theme') as ThemeOption | null
+    if (savedTheme && Object.keys(THEME_ICONS).includes(savedTheme)) {
+      setTheme(savedTheme)
+      document.documentElement.className = savedTheme
     }
   }, [])
 
   const toggleTheme = () => {
-    const newTheme = !isDark ? 'dark' : 'light'
-    const success = requestThemeChange(newTheme)
+    // Cycle through themes: light -> dark -> blue -> purple -> green -> light
+    const themeOrder: ThemeOption[] = ['light', 'dark', 'blue', 'purple', 'green']
+    const currentIndex = themeOrder.indexOf(theme)
+    const nextTheme = themeOrder[(currentIndex + 1) % themeOrder.length]
     
-    // If success is false, the feedback form will be shown
-    // The theme will be applied after form submission
-    if (success) {
-      document.documentElement.classList.toggle('dark')
+    setTheme(nextTheme)
+    document.documentElement.className = nextTheme
+    localStorage.setItem('theme', nextTheme)
+
+    // Also update user settings if they exist
+    const settings = localStorage.getItem('user_settings')
+    if (settings) {
+      const parsed = JSON.parse(settings)
+      parsed.theme = nextTheme
+      localStorage.setItem('user_settings', JSON.stringify(parsed))
     }
   }
 
-  if (!mounted) return null
-
   return (
-    <>
-      <button
-        onClick={toggleTheme}
-        className="relative inline-flex items-center justify-center w-14 h-7 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-        aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
-      >
-        <span className="sr-only">Toggle theme</span>
-        
-        {/* Toggle switch */}
-        <span
-          className={`absolute left-1 w-5 h-5 rounded-full transform transition-transform duration-300 ${
-            isDark ? 'translate-x-7 bg-primary' : 'translate-x-0 bg-white'
-          }`}
-        />
-        
-        {/* Icons */}
-        <span className="absolute inset-0 flex items-center justify-between px-1.5">
-          <SunIcon className={`w-3.5 h-3.5 text-yellow-500 transition-opacity duration-300 ${
-            isDark ? 'opacity-0' : 'opacity-100'
-          }`} />
-          <MoonIcon className={`w-3.5 h-3.5 text-blue-200 transition-opacity duration-300 ${
-            isDark ? 'opacity-100' : 'opacity-0'
-          }`} />
-        </span>
-      </button>
-
-      <FeedbackForm
-        isOpen={showFeedbackForm}
-        onClose={() => setShowFeedbackForm(false)}
-        onSubmit={savePreferences}
-      />
-    </>
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      aria-label="Toggle theme"
+      title={`Current theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}
+    >
+      {THEME_ICONS[theme]}
+      <span className="sr-only">
+        Current theme: {theme.charAt(0).toUpperCase() + theme.slice(1)}
+      </span>
+    </button>
   )
 }

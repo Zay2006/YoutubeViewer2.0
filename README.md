@@ -2,16 +2,17 @@
 
 ## 📌 Overview
 
-FocusTube is a modern, distraction-free YouTube viewer built with Next.js and Tailwind CSS. The application provides a clean interface for watching videos while maintaining essential features like video recommendations and theme customization.
+FocusTube is a modern, distraction-free YouTube viewer built with Next.js and Tailwind CSS. The application provides a clean interface for watching videos and playlists while maintaining essential features like video recommendations and theme customization.
 
 ## 🚀 Features
 
 - **Clean Interface**: Minimalist design that focuses on the video content
+- **Video & Playlist Support**: Watch individual videos or entire YouTube playlists
 - **Grid Layout**: Responsive CSS Grid layout with main video and recommended section
 - **Video Information**: Display of video title, views, and description
-- **Recommended Videos**: Curated list of 4 related videos
+- **Recommended Videos**: Curated list of related videos
 - **Theme Toggle**: Light and dark mode support with system preference detection
-- **Modern Tech Stack**: Built with Next.js, TypeScript, and Tailwind CSS
+- **Modern Tech Stack**: Built with Next.js 14, TypeScript, and Tailwind CSS
 
 ## 🛠️ Technical Implementation
 
@@ -31,9 +32,13 @@ FocusTube is a modern, distraction-free YouTube viewer built with Next.js and Ta
 ### Video Player Features
 
 - Embedded YouTube player with minimal branding
+- Support for both single videos and playlists
 - Video metadata display (title, views, description)
 - Easy video switching through recommendations
-- URL/Video ID input for direct video loading
+- Flexible URL input supporting:
+  - Regular videos: `youtube.com/watch?v=VIDEO_ID`
+  - Playlists: `youtube.com/playlist?list=PLAYLIST_ID`
+  - Videos in playlists: `youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID`
 
 ## 📦 Technologies Used
 
