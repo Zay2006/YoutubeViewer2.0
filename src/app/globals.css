@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Light Theme (Default) */
+:root {
+  --primary: #2563eb;
+  --background: #f8fafc;
+  --text: #0f172a;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --accent: #3b82f6;
+}
+
+.dark {
+  /* Dark theme colors */
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 17, 24, 39;
+  --background-end-rgb: 26, 26, 26;
+  --primary-color: 59, 130, 246;
+  --card-bg: 31, 41, 55;
+  --nav-bg: 31, 41, 55;
+  --border-color: 75, 85, 99;
+}
+
+/* Apply smooth transitions to theme changes */
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+}
+
+/* Custom styles for video cards */
+.video-card {
+  background: rgb(var(--card-bg));
+  border: 1px solid rgb(var(--border-color));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.video-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Navigation bar styles */
+.nav-bar {
+  background: rgb(var(--nav-bg));
+  border-bottom: 1px solid rgb(var(--border-color));
+  backdrop-filter: blur(8px);
+}
+
+/* Theme toggle button styles */
+.theme-toggle-btn {
+  @apply relative inline-flex items-center justify-center rounded-full focus:outline-none;
+  background: rgb(var(--card-bg));
+  border: 1px solid rgb(var(--border-color));
+}
+
+.theme-toggle-btn:hover {
+  @apply bg-gray-100 dark:bg-gray-700;
+}

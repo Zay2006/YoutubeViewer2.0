@@ -1,93 +1,83 @@
-# 🎯 FocusTube - Minimal YouTube Viewer
+# 🎯 FocusTube - Modern YouTube Viewer
 
 ## 📌 Overview
 
-FocusTube is a streamlined YouTube viewer that removes distractions to help users stay focused while watching videos. The project has gone through several iterations based on user feedback, enhancing layout, functionality, and personalization features.
+FocusTube is a modern, distraction-free YouTube viewer built with Next.js and Tailwind CSS. The application provides a clean interface for watching videos while maintaining essential features like video recommendations and theme customization.
 
----
+## 🚀 Features
 
-## 🚧 Problem Statements & Project Scopes
+- **Clean Interface**: Minimalist design that focuses on the video content
+- **Grid Layout**: Responsive CSS Grid layout with main video and recommended section
+- **Video Information**: Display of video title, views, and description
+- **Recommended Videos**: Curated list of 4 related videos
+- **Theme Toggle**: Light and dark mode support with system preference detection
+- **Modern Tech Stack**: Built with Next.js, TypeScript, and Tailwind CSS
 
-### ✅ Phase 1: Basic YouTube Embed Page
-**Problem:**  
-YouTube’s default interface contains distractions that reduce focus.  
-**Scope:**  
-Build an HTML webpage that embeds a YouTube video, removing related content and links that cause distraction. Use HTML5 elements for structure and presentation.
+## 🛠️ Technical Implementation
 
----
+### Components Structure
 
-### ✅ Phase 2: Improved Layout
-**Problem:**  
-User feedback showed that the initial layout was not user-friendly.  
-**Scope:**  
-Refactor the layout using CSS Grid. Create a main video display with a section below it for 4-5 suggested videos.
+- `page.tsx`: Main application page with layout and video player
+- `VideoCard.tsx`: Reusable component for video thumbnails
+- `useYoutubeData.ts`: Custom hook for managing video data
 
----
+### Layout Features
 
-### ✅ Phase 3: Theme Toggle Feature
-**Problem:**  
-Users requested the ability to toggle between light and dark themes.  
-**Scope:**  
-Implement light (default) and dark themes with a toggle switch styled with icons.
+- CSS Grid for responsive layout
+- Main video section (2/3 width on desktop)
+- Recommended videos sidebar (1/3 width on desktop)
+- Responsive design for mobile devices
 
----
+### Video Player Features
 
-### ✅ Phase 4: User Feedback & Theme Persistence
-**Problem:**  
-We need to track theme requests and retain user preferences.  
-**Scope:**  
-Add a popup form to collect user data (name, email, theme). Store preferences using Local Storage and restore them on page load.
+- Embedded YouTube player with minimal branding
+- Video metadata display (title, views, description)
+- Easy video switching through recommendations
+- URL/Video ID input for direct video loading
 
----
+## 📦 Technologies Used
 
-### ✅ Phase 5: Full User Profile & Multi-Theme Support
-**Problem:**  
-Validated user demand for themes requires a full profile system and additional themes.  
-**Scope:**  
-Create a user profile form capturing name, email, password, and theme. Validate input. Add a navigation menu with "Home" and "Profile" links. Introduce 3+ new themes using radio inputs or toggle buttons.
+- **Next.js 14**: React framework for production
+- **TypeScript**: Type-safe code
+- **Tailwind CSS**: Utility-first styling
+- **Heroicons**: Modern icon set
+- **YouTube Embed API**: Video playback
 
----
+## 🔍 Code Documentation
 
-## 📦 Deliverables Checklist
+### TypeScript Files
+- `page.tsx`: Main page component with layout and state management
+- `VideoCard.tsx`: Reusable video card component with TypeScript interfaces
+- `useYoutubeData.ts`: Custom hook for video data management
 
-- [x] Reviewed the concept rubric for each phase
-- [x] Created GitHub Project stories, related issues & tasks
-- [x] Commented code for readability and logical flow
-- [x] Uploaded the latest version of code to GitHub
-- [x] Hosted project using GitHub Pages
-- [x] Submitted GitHub link to Beacon
-- [x] Embedded YouTube videos using `<iframe>` in `index.html`
-- [x] Used HTML5 semantic elements for accessibility and structure
-- [x] Applied responsive styles using CSS and Grid
-- [x] Properly displayed video metadata (title, description, etc.)
-- [x] Added and styled a theme toggle button (Light/Dark)
-- [x] Used JavaScript for interactive functionality
-- [x] Implemented Local Storage API for user preference retention
-- [x] Created a form using `document.createElement()` for:
-  - Name
-  - Email
-  - Theme selection
-  - Submit button
-- [x] Validated form inputs (e.g., name must be ≥ 4 characters)
-- [x] Created a separate profile page loaded from local storage
-- [x] Added a top navigation menu (Home, Profile)
-- [x] Introduced 3 or more theme options
+### CSS/Styling
+- Tailwind CSS classes for responsive design
+- Dark mode support with CSS variables
+- Grid layout for optimal content organization
 
----
+## ✅ Project Requirements Met
 
-## 🧩 Technologies Used
+- [x] Improved layout using CSS Grid
+- [x] Main video section with proper spacing
+- [x] Recommended videos section (4-5 videos)
+- [x] Video attributes display (title, views, description)
+- [x] Modern UI with Tailwind CSS
+- [x] TypeScript for type safety
+- [x] Responsive design for all devices
+- [x] Dark/Light theme toggle
+- [x] Code documentation and comments
+- [x] HTML5 semantic elements
+- [x] Clean project structure
 
-- HTML5
-- CSS Grid / Flexbox
-- Vanilla JavaScript
-- GitHub Pages (Hosting)
-- Local Storage API
+## 🚀 Getting Started
 
----
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Run development server: `npm run dev`
+4. Open http://localhost:3000
 
-## 🗃️ File Documentation
+## 📝 Notes
 
-All files are fully documented and follow best practices:
-- ✅ `index.html`: Structured with semantic HTML5 tags
-- ✅ `style.css`: Clearly commented with theme styles and layout rules
-- ✅ `script.js`: Handles event logic, theme toggling, form creation, and local storage interaction
+- The application uses mock data for recommendations (in a production environment, this would use the YouTube API)
+- Theme preference is persisted in localStorage
+- The layout is fully responsive and adapts to different screen sizes
