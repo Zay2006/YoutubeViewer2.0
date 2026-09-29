@@ -1,114 +1,103 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  findCatalogVideo,
+  getRecommendations,
+  isAllowedThumbnail,
+  youtubeThumbnail,
+  type VideoData,
+} from '@/lib/catalog'
+import type { YouTubeParams } from '@/lib/youtube'
 
-export interface VideoData {
-  id: string
-  title: string
-  thumbnail: string
-  views: string
-  duration: string
+interface OEmbedResponse {
+  title?: string
   channel?: string
+  thumbnail?: string
 }
 
-const SAMPLE_VIDEOS: Record<string, VideoData[]> = {
-  // Gaming category
-  gaming: [
-    {
-      id: 'dQw4w9WgXcQ',
-      title: 'Top Gaming Moments 2025',
-      thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
-      views: '2.1M views',
-      duration: '12:45',
-      channel: 'Gaming Central'
-    },
-    {
-      id: 'ZZ5LpwO-An4',
-      title: 'Pro Gaming Tips & Tricks',
-      thumbnail: 'https://img.youtube.com/vi/ZZ5LpwO-An4/maxresdefault.jpg',
-      views: '890K views',
-      duration: '8:30',
-      channel: 'Pro Gaming'
-    }
-  ],
-  // Music category
-  music: [
-    {
-      id: 'y6120QOlsfU',
-      title: 'New Music Hits 2025',
-      thumbnail: 'https://img.youtube.com/vi/y6120QOlsfU/maxresdefault.jpg',
-      views: '3.2M views',
-      duration: '15:20',
-      channel: 'Music Now'
-    },
-    {
-      id: '9bZkp7q19f0',
-      title: 'Top Charts Compilation',
-      thumbnail: 'https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg',
-      views: '1.5M views',
-      duration: '10:15',
-      channel: 'Music Charts'
-    }
-  ],
-  // Technology category
-  tech: [
-    {
-      id: 'M7lc1UVf-VE',
-      title: 'Latest Tech Reviews 2025',
-      thumbnail: 'https://img.youtube.com/vi/M7lc1UVf-VE/maxresdefault.jpg',
-      views: '950K views',
-      duration: '18:30',
-      channel: 'Tech Review'
-    },
-    {
-      id: 'rfscVS0vtbw',
-      title: 'Programming Tutorial',
-      thumbnail: 'https://img.youtube.com/vi/rfscVS0vtbw/maxresdefault.jpg',
-      views: '750K views',
-      duration: '25:45',
-      channel: 'Code Master'
-    }
-  ]
-}
-
-export function useYoutubeData(videoId: string) {
+export function useYoutubeData(params: YouTubeParams | null) {
+  const videoId = params?.videoId ?? ''
+  const playlistId = params?.playlistId ?? ''
   const [mainVideo, setMainVideo] = useState<VideoData | null>(null)
   const [recommendedVideos, setRecommendedVideos] = useState<VideoData[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!videoId) {
+    if (!videoId && !playlistId) {
       setMainVideo(null)
       setRecommendedVideos([])
+      setLoading(false)
+      setError(null)
       return
     }
 
+    const controller = new AbortController()
+    let cancelled = false
+    let timedOut = false
+    const timeout = window.setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, 8000)
+    const catalogVideo = videoId ? findCatalogVideo(videoId) : undefined
+    const fallback: VideoData = {
+      id: videoId || playlistId,
+      title: catalogVideo?.title ?? (videoId ? 'YouTube video' : 'YouTube playlist'),
+      thumbnail: videoId ? youtubeThumbnail(videoId) : '',
+      views: catalogVideo?.views,
+      duration: catalogVideo?.duration,
+      channel: catalogVideo?.channel,
+      description: catalogVideo?.description,
+    }
+
     setLoading(true)
+    setError(null)
+    setMainVideo(fallback)
+    setRecommendedVideos(getRecommendations(videoId || playlistId))
 
-    // Simulate API delay
-    setTimeout(() => {
-      // Update main video
-      setMainVideo({
-        id: videoId,
-        title: `Video ${videoId}`,
-        thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-        views: `${Math.floor(Math.random() * 900 + 100)}K views`,
-        duration: `${Math.floor(Math.random() * 10 + 5)}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
-        channel: 'Channel Name'
-      })
+    async function loadDetails() {
+      try {
+        const query = new URLSearchParams()
+        if (videoId) query.set('videoId', videoId)
+        if (playlistId) query.set('playlistId', playlistId)
+        const response = await fetch(`/api/oembed?${query.toString()}`, {
+          signal: controller.signal,
+        })
+        if (cancelled) return
 
-      // Get random category for recommendations
-      const categories = Object.keys(SAMPLE_VIDEOS)
-      const randomCategory = categories[Math.floor(Math.random() * categories.length)]
-      
-      // Get recommendations
-      const recommendations = SAMPLE_VIDEOS[randomCategory]
-        .filter(video => video.id !== videoId)
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 4)
+        if (!response.ok) {
+          setError('Video details could not be loaded. Playback may still work.')
+          return
+        }
 
-      setRecommendedVideos(recommendations)
-      setLoading(false)
-    }, 500)
-  }, [videoId])
+        const data = (await response.json()) as OEmbedResponse
+        if (cancelled) return
+        setMainVideo({
+          ...fallback,
+          title: data.title || fallback.title,
+          channel: data.channel || fallback.channel,
+          thumbnail: data.thumbnail && isAllowedThumbnail(data.thumbnail)
+            ? data.thumbnail
+            : fallback.thumbnail,
+        })
+      } catch (loadError) {
+        if (cancelled) return
+        const aborted = loadError instanceof DOMException && loadError.name === 'AbortError'
+        if (aborted && !timedOut) return
+        setError('Video details could not be loaded. Playback may still work.')
+      } finally {
+        window.clearTimeout(timeout)
+        if (!cancelled) setLoading(false)
+      }
+    }
 
-  return { mainVideo, recommendedVideos, loading }
+    void loadDetails()
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [videoId, playlistId])
+
+  return { mainVideo, recommendedVideos, loading, error }
 }

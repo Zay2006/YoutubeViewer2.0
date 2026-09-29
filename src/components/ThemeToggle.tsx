@@ -1,58 +1,53 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { SunIcon, MoonIcon } from '@heroicons/react/24/outline'
-import type { ThemeOption } from '@/types/user'
+import { usePreferences } from '@/context/PreferencesContext'
+import { THEME_OPTIONS, type ThemeOption } from '@/lib/preferences'
 
-const THEME_ICONS = {
-  light: <SunIcon className="w-6 h-6" />,
-  dark: <MoonIcon className="w-6 h-6" />,
-  blue: <SunIcon className="w-6 h-6 text-blue-500" />,
-  purple: <SunIcon className="w-6 h-6 text-purple-500" />,
-  green: <SunIcon className="w-6 h-6 text-green-500" />
-} as const
+function labelFor(theme: ThemeOption) {
+  return theme.charAt(0).toUpperCase() + theme.slice(1)
+}
+
+function ThemeIcon({ theme }: { theme: ThemeOption }) {
+  if (theme === 'dark') return <MoonIcon className="w-6 h-6" />
+  const color = {
+    light: '',
+    blue: 'text-blue-500',
+    purple: 'text-purple-500',
+    green: 'text-green-500',
+  }[theme]
+  return <SunIcon className={`w-6 h-6 ${color}`} />
+}
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<ThemeOption>('light')
+  const { preferences, updatePreferences } = usePreferences()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as ThemeOption | null
-    if (savedTheme && Object.keys(THEME_ICONS).includes(savedTheme)) {
-      setTheme(savedTheme)
-      document.documentElement.className = savedTheme
-    }
+    setMounted(true)
   }, [])
 
-  const toggleTheme = () => {
-    // Cycle through themes: light -> dark -> blue -> purple -> green -> light
-    const themeOrder: ThemeOption[] = ['light', 'dark', 'blue', 'purple', 'green']
-    const currentIndex = themeOrder.indexOf(theme)
-    const nextTheme = themeOrder[(currentIndex + 1) % themeOrder.length]
-    
-    setTheme(nextTheme)
-    document.documentElement.className = nextTheme
-    localStorage.setItem('theme', nextTheme)
+  const theme = preferences.theme
+  const themeLabel = labelFor(theme)
 
-    // Also update user settings if they exist
-    const settings = localStorage.getItem('user_settings')
-    if (settings) {
-      const parsed = JSON.parse(settings)
-      parsed.theme = nextTheme
-      localStorage.setItem('user_settings', JSON.stringify(parsed))
-    }
+  const toggleTheme = () => {
+    const currentIndex = THEME_OPTIONS.indexOf(theme)
+    const nextTheme = THEME_OPTIONS[(currentIndex + 1) % THEME_OPTIONS.length]
+    updatePreferences({ theme: nextTheme })
   }
 
   return (
     <button
+      type="button"
       onClick={toggleTheme}
-      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-      aria-label="Toggle theme"
-      title={`Current theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)}`}
+      className="p-2 rounded-lg hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      aria-label={mounted ? `Toggle theme. Current theme: ${themeLabel}` : 'Toggle theme'}
+      title={mounted ? `Current theme: ${themeLabel}` : 'Toggle theme'}
     >
-      {THEME_ICONS[theme]}
+      {mounted ? <ThemeIcon theme={theme} /> : <span className="block w-6 h-6" />}
       <span className="sr-only">
-        Current theme: {theme.charAt(0).toUpperCase() + theme.slice(1)}
+        {mounted ? `Current theme: ${themeLabel}` : 'Current theme'}
       </span>
     </button>
   )

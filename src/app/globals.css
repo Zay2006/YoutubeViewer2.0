@@ -2,104 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light Theme (default) */
+/* Light theme (default) */
 :root {
-  --background: 255, 255, 255;
-  --background-darker: 241, 245, 249;
-  --foreground: 15, 23, 42;
-  --primary: 37, 99, 235;
-  --secondary: 71, 85, 105;
-  --accent: 59, 130, 246;
-  --muted: 241, 245, 249;
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --primary: 29 78 216;
+  --secondary: 71 85 105;
+  --accent: 37 99 235;
+  --muted: 241 245 249;
 }
 
-/* Dark Theme */
 :root.dark {
-  --background: 17, 24, 39;
-  --background-darker: 15, 23, 42;
-  --foreground: 241, 245, 249;
-  --primary: 59, 130, 246;
-  --secondary: 148, 163, 184;
-  --accent: 37, 99, 235;
-  --muted: 30, 41, 59;
+  --background: 17 24 39;
+  --foreground: 241 245 249;
+  --primary: 37 99 235;
+  --secondary: 148 163 184;
+  --accent: 147 197 253;
+  --muted: 30 41 59;
 }
 
-/* Ocean Blue Theme */
 :root.blue {
-  --background: 235, 245, 255;
-  --background-darker: 219, 234, 254;
-  --foreground: 15, 23, 42;
-  --primary: 0, 112, 243;
-  --secondary: 28, 100, 242;
-  --accent: 0, 149, 255;
-  --muted: 219, 234, 254;
+  --background: 235 245 255;
+  --foreground: 15 23 42;
+  --primary: 29 78 216;
+  --secondary: 30 64 175;
+  --accent: 37 99 235;
+  --muted: 219 234 254;
 }
 
-/* Royal Purple Theme */
 :root.purple {
-  --background: 250, 245, 255;
-  --background-darker: 243, 232, 255;
-  --foreground: 15, 23, 42;
-  --primary: 147, 51, 234;
-  --secondary: 126, 34, 206;
-  --accent: 168, 85, 247;
-  --muted: 243, 232, 255;
+  --background: 250 245 255;
+  --foreground: 15 23 42;
+  --primary: 107 33 168;
+  --secondary: 88 28 135;
+  --accent: 126 34 206;
+  --muted: 243 232 255;
 }
 
-/* Forest Green Theme */
 :root.green {
-  --background: 240, 253, 244;
-  --background-darker: 220, 252, 231;
-  --foreground: 15, 23, 42;
-  --primary: 34, 197, 94;
-  --secondary: 22, 163, 74;
-  --accent: 16, 185, 129;
-  --muted: 220, 252, 231;
+  --background: 240 253 244;
+  --foreground: 15 23 42;
+  --primary: 21 128 61;
+  --secondary: 22 101 52;
+  --accent: 22 163 74;
+  --muted: 220 252 231;
 }
 
-/* Smooth transitions */
-:root * {
-  transition: background-color 0.3s ease-in-out,
-              color 0.3s ease-in-out,
-              border-color 0.3s ease-in-out,
-              box-shadow 0.3s ease-in-out;
-}
-
-/* Common styles */
 body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
   min-height: 100vh;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
-/* Custom styles for video cards */
-.video-card {
-  background: rgb(var(--card-bg));
-  border: 1px solid rgb(var(--border-color));
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.video-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-}
-
-/* Navigation bar styles */
-.nav-bar {
-  background: rgb(var(--nav-bg));
-  border-bottom: 1px solid rgb(var(--border-color));
-  backdrop-filter: blur(8px);
-}
-
-/* Utility classes */
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors;
+    @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .card {
-    @apply p-6 bg-background rounded-xl shadow-sm border border-muted;
+    @apply bg-background rounded-xl shadow-sm border border-muted;
+  }
+
+  .media-card {
+    @apply bg-background rounded-xl shadow-sm border border-muted overflow-hidden text-left w-full cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary;
   }
 
   .form-label {
@@ -107,25 +73,6 @@ body {
   }
 
   .form-input {
-    @apply w-full px-3 py-2 border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply w-full px-3 py-2 bg-background text-foreground border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed;
   }
-
-  .nav-link {
-    @apply px-3 py-2 rounded-lg text-secondary hover:bg-muted transition-colors;
-  }
-
-  .nav-link.active {
-    @apply text-primary bg-primary/5;
-  }
-}
-
-/* Theme toggle button styles */
-.theme-toggle-btn {
-  @apply relative inline-flex items-center justify-center rounded-full focus:outline-none;
-  background: rgb(var(--card-bg));
-  border: 1px solid rgb(var(--border-color));
-}
-
-.theme-toggle-btn:hover {
-  @apply bg-gray-100 dark:bg-gray-700;
 }

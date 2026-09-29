@@ -1,141 +1,153 @@
 'use client'
 
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import VideoCard from '@/components/VideoCard'
+import { usePreferences } from '@/context/PreferencesContext'
 import { useYoutubeData } from '@/hooks/useYoutubeData'
+import { buildEmbedUrl, extractYouTubeParams, type YouTubeParams } from '@/lib/youtube'
 
-interface YouTubeParams {
-  videoId?: string;
-  playlistId?: string;
-}
-
-/**
- * Extracts video ID and playlist ID from a YouTube URL
- * Supports formats:
- * - youtube.com/watch?v=VIDEO_ID
- * - youtu.be/VIDEO_ID
- * - youtube.com/playlist?list=PLAYLIST_ID
- * - youtube.com/watch?v=VIDEO_ID&list=PLAYLIST_ID
- */
-const extractYouTubeParams = (url: string): YouTubeParams => {
-  const videoRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/
-  const playlistRegExp = /[?&]list=([^#\&\?]*)/
-
-  const videoMatch = url.match(videoRegExp)
-  const playlistMatch = url.match(playlistRegExp)
-
-  const videoId = videoMatch?.[2]
-  const playlistId = playlistMatch?.[1]
-
-  return {
-    videoId: videoId?.length === 11 ? videoId : undefined,
-    playlistId: playlistId || undefined
-  }
+interface Playback {
+  params: YouTubeParams
+  autoplay: boolean
 }
 
 export default function Home() {
+  const { preferences } = usePreferences()
   const [videoUrl, setVideoUrl] = useState('')
-  const { videoId, playlistId } = extractYouTubeParams(videoUrl)
-  const { mainVideo, recommendedVideos, loading } = useYoutubeData(videoId || '')
+  const [urlError, setUrlError] = useState('')
+  const [playback, setPlayback] = useState<Playback | null>(null)
+  const { mainVideo, recommendedVideos, loading, error } = useYoutubeData(playback?.params ?? null)
 
-  const handleLoadVideo = () => {
-    const trimmedUrl = videoUrl.trim()
-    if (!trimmedUrl) return
-    setVideoUrl(trimmedUrl)
+  const loadVideo = (rawValue: string) => {
+    const trimmed = rawValue.trim()
+    if (!trimmed) {
+      setUrlError('Enter a YouTube URL or video ID.')
+      return
+    }
+
+    const params = extractYouTubeParams(trimmed)
+    if (!params) {
+      setUrlError('That does not look like a YouTube URL or video ID.')
+      return
+    }
+
+    setUrlError('')
+    setVideoUrl(trimmed)
+    setPlayback({ params, autoplay: preferences.autoplay })
+  }
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    loadVideo(videoUrl)
   }
 
   const handleVideoSelect = (id: string) => {
-    if (!id) return
-    setVideoUrl(`https://www.youtube.com/watch?v=${id}`)
+    loadVideo(`https://www.youtube.com/watch?v=${id}`)
   }
+
+  const hasRecommendations = recommendedVideos.length > 0
 
   return (
     <main className="min-h-screen p-4 bg-background text-foreground">
-      {/* Video input section */}
       <div className="max-w-7xl mx-auto mb-8">
-        <div className="card p-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+        <form onSubmit={handleSubmit} className="card p-4" noValidate>
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div className="flex-1 w-full">
+              <label htmlFor="video-url" className="sr-only">
+                YouTube URL or video ID
+              </label>
               <input
+                id="video-url"
                 type="text"
                 value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLoadVideo()}
-                placeholder="Enter YouTube URL or Video ID"
+                onChange={(event) => {
+                  setVideoUrl(event.target.value)
+                  if (urlError) setUrlError('')
+                }}
+                placeholder="Enter a YouTube URL or video ID"
                 className="form-input"
+                autoComplete="off"
+                spellCheck={false}
+                aria-invalid={urlError ? true : undefined}
+                aria-describedby={urlError ? 'video-url-error' : undefined}
               />
+              {urlError && (
+                <p id="video-url-error" className="mt-2 text-sm text-red-600" role="alert">
+                  {urlError}
+                </p>
+              )}
             </div>
             <button
-              onClick={handleLoadVideo}
+              type="submit"
               className="btn-primary w-full md:w-auto"
               disabled={loading}
             >
-              {loading ? 'Loading...' : 'Load Video'}
+              {loading ? 'Loading...' : 'Load video'}
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      {/* Main content */}
-      <div className="max-w-7xl mx-auto grid gap-6">
-        {/* Main video section */}
-        <section className="grid grid-cols-1 gap-6">
-          <div className="w-full">
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden shadow-lg relative">
-              {(videoId || playlistId) ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${
-                    videoId || ''
-                  }${playlistId ? `?list=${playlistId}` : '?rel=0&modestbranding=1'}`}
-                  title="YouTube video player"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-secondary">
-                  Enter a YouTube URL or video ID above to start watching
-                </div>
-              )}
-              {loading && (
-                <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-                </div>
-              )}
-            </div>
-            {mainVideo && (
-              <div className="mt-4 card">
-                <h2 className="text-xl font-bold mb-2">{mainVideo.title}</h2>
-                <div className="flex flex-wrap items-center gap-2 text-sm text-secondary mb-2">
-                  {mainVideo.channel && (
-                    <>
-                      <span className="font-medium">{mainVideo.channel}</span>
-                      <span>•</span>
-                    </>
-                  )}
-                  <span>{mainVideo.views}</span>
-                </div>
+      <div className={`max-w-7xl mx-auto grid gap-6 ${hasRecommendations ? 'lg:grid-cols-3' : ''}`}>
+        <section className={hasRecommendations ? 'lg:col-span-2' : undefined}>
+          {!mainVideo && <h1 className="sr-only">FocusTube</h1>}
+          <div className="relative aspect-video bg-muted rounded-lg overflow-hidden shadow-lg">
+            {playback ? (
+              <iframe
+                key={`${playback.params.videoId ?? ''}-${playback.params.playlistId ?? ''}-${playback.params.start ?? 0}`}
+                src={buildEmbedUrl({ ...playback.params, autoplay: playback.autoplay })}
+                title={mainVideo?.title ?? 'YouTube video player'}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+                className="absolute inset-0 w-full h-full"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-secondary">
+                Enter a YouTube URL or video ID above to start watching
               </div>
             )}
           </div>
 
-          {/* Recommended videos */}
-          {recommendedVideos.length > 0 && (
-            <div className="w-full">
-              <h3 className="text-lg font-semibold mb-4">Recommended Videos</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {recommendedVideos.map((video) => (
-                  <VideoCard
-                    key={video.id}
-                    {...video}
-                    onSelect={handleVideoSelect}
-                  />
-                ))}
+          {mainVideo && (
+            <div className="mt-4 card p-6">
+              <h1 className="text-xl font-bold mb-2">{mainVideo.title}</h1>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-secondary mb-2">
+                {mainVideo.channel && (
+                  <>
+                    <span className="font-medium">{mainVideo.channel}</span>
+                    <span aria-hidden="true">•</span>
+                  </>
+                )}
+                {mainVideo.views && <span>{mainVideo.views} views</span>}
               </div>
+              {mainVideo.description && (
+                <p className="text-sm text-secondary">{mainVideo.description}</p>
+              )}
+              {loading && (
+                <p className="mt-3 text-sm text-secondary" role="status">Loading video details...</p>
+              )}
+              {error && (
+                <p className="mt-3 text-sm text-red-600" role="alert">{error}</p>
+              )}
             </div>
           )}
         </section>
+
+        {hasRecommendations && (
+          <aside className="lg:col-span-1">
+            <h2 className="text-lg font-semibold mb-4">Recommended videos</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+              {recommendedVideos.map((video) => (
+                <VideoCard
+                  key={video.id}
+                  {...video}
+                  onSelect={handleVideoSelect}
+                />
+              ))}
+            </div>
+          </aside>
+        )}
       </div>
     </main>
   )
